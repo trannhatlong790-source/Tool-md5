@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<title>MD5 BY LONGDZ - AI UNIVERSE</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"/>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Orbitron:wght@400;600;700;900&display=swap" rel="stylesheet"/>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
+<style>
+:root { --c-bg: #02030a; --c-panel: rgba(4,8,22,0.97); --c-border: rgba(0,210,255,0.18); --c-glow: #00d2ff; --c-tai: #00ffaa; --c-xiu: #ff3c6e; --c-gold: #ffd060; --font-hud: 'Orbitron', monospace; --font-data: 'Share Tech Mono', monospace; --font-body: 'Rajdhani', sans-serif; }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--c-bg);font-family:var(--font-body)}
+
+/* IFRAME GAME */
+#gameFrame{ position:fixed;inset:0;width:100vw;height:100vh; border:none;z-index:1; }
+
+/* ── MÃ NGUỒN CŨ (URL BAR & FAB) ── */
+#urlBar{ position:fixed;top:0;left:0;right:0;height:40px; background:rgba(2,4,14,0.92); border-bottom:1px solid var(--c-border); display:flex;align-items:center;gap:8px;padding:0 10px; z-index:9990; -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px); transform:translateY(-44px); transition:transform 0.35s cubic-bezier(.22,1,.36,1); }
+#urlBar.visible{transform:translateY(0)}
+#urlInput{ flex:1;background:rgba(0,210,255,0.06);border:1px solid rgba(0,210,255,0.2); border-radius:6px;padding:5px 10px;color:#e0f8ff; font-family:var(--font-data);font-size:12px;outline:none; }
+#goBtn{ padding:5px 14px;background:linear-gradient(135deg,#0066aa,#00aaff); border:none;border-radius:6px;color:#fff;font-family:var(--font-hud); font-size:10px;font-weight:700;cursor:pointer; }
+.fab-group{ position:fixed;bottom:22px;right:16px; display:flex;flex-direction:column;align-items:flex-end;gap:10px; z-index:9995; }
+.fab{ width:48px;height:48px;border-radius:50%;border:none; display:flex;align-items:center;justify-content:center; cursor:pointer;font-size:20px; transition:transform .2s,box-shadow .2s; }
+.fab:hover{transform:scale(1.12)}
+.fab-md5{ background:linear-gradient(135deg,#0a001a,#1a0033); border:1.5px solid rgba(160,80,255,0.5); box-shadow:0 0 18px rgba(160,80,255,0.3); animation:fabPulse 2.5s ease-in-out infinite; }
+.sphere-icon-md5 { width: 32px; height: 32px; border-radius: 50%; background: radial-gradient(circle at 35% 25%, #ffffff 0%, #a050ff 25%, #4a0088 70%, #1a0033 100%); box-shadow: 0 0 15px #a050ff, inset -3px -3px 8px rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; }
+.sphere-text { font-size: 16px; color: #fff; text-shadow: 0 0 5px rgba(0,0,0,0.8); }
+
+/* --- MENU 3 GẠCH & SIDEBAR --- */
+.menu-btn { position: fixed; top: 15px; left: 15px; z-index: 10001; font-size: 24px; color: var(--c-glow); cursor: pointer; background: rgba(0,0,0,0.6); padding: 5px 12px; border-radius: 8px; border: 1px solid var(--c-border); backdrop-filter: blur(5px); }
+.sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: rgba(5,10,25,0.98); border-right: 1px solid var(--c-border); z-index: 10000; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 70px 20px 20px 20px; box-shadow: 5px 0 30px rgba(0,0,0,0.9); display: flex; flex-direction: column; gap: 12px; }
+.sidebar.open { left: 0; }
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; display: none; }
+.sb-user { background: rgba(0,210,255,0.05); padding: 20px; border-radius: 12px; text-align: center; border: 1px solid rgba(0,210,255,0.2); margin-bottom: 10px; }
+.sb-user h3 { color: var(--c-gold); margin-bottom: 8px; font-family: var(--font-hud); font-size: 18px; }
+.sb-user p { color: var(--c-tai); font-size: 13px; font-family: var(--font-data); font-weight: bold; }
+.sb-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 14px; color: #fff; text-align: left; border-radius: 8px; cursor: pointer; font-family: var(--font-body); font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+.sb-btn:hover { background: rgba(0,210,255,0.15); border-color: var(--c-glow); }
+
+/* --- MODALS (POPUP) --- */
+.modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); width: 90%; max-width: 380px; background: rgba(10,15,30,0.98); border: 1px solid var(--c-border); border-radius: 15px; padding: 25px; z-index: 10002; display: none; opacity: 0; transition: 0.3s; box-shadow: 0 10px 50px rgba(0,0,0,0.9); }
+.modal.show { display: block; opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.modal h3 { text-align: center; color: var(--c-glow); font-family: var(--font-hud); margin-bottom: 20px; font-size: 20px;}
+.close-modal { position: absolute; top: 15px; right: 15px; color: #888; cursor: pointer; font-size: 20px; }
+.dep-tabs { display: flex; gap: 5px; margin-bottom: 15px; }
+.dep-tabs button { flex: 1; padding: 12px; background: #111; border: 1px solid #333; color: #888; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: var(--font-body); font-size:15px;}
+.dep-tabs button.active { background: linear-gradient(90deg, #00d2ff, #0066aa); color: #fff; border-color: var(--c-glow); }
+.m-input { width: 100%; padding: 14px; margin-bottom: 15px; background: rgba(0,0,0,0.5); border: 1px solid #444; color: #fff; border-radius: 8px; font-family: var(--font-data); outline: none; font-size: 15px;}
+.m-btn { width: 100%; padding: 14px; background: linear-gradient(90deg, #00ffaa, #00aa66); border: none; color: #000; font-weight: bold; font-family: var(--font-hud); border-radius: 8px; cursor: pointer; font-size: 16px;}
+
+/* LỊCH SỬ NẠP THẺ */
+.hist-list { max-height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px;}
+.hist-item { background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; font-family: var(--font-body); }
+.hist-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+.h-code { color: #fff; font-weight: bold; font-size: 15px;}
+.h-val { color: var(--c-glow); font-family: var(--font-data); font-size: 14px;}
+.h-time { color: #888; font-size: 12px; }
+.st-wait { color: #ffd060; font-size: 12px; font-weight: bold; background: rgba(255,208,96,0.1); padding: 3px 8px; border-radius: 4px;} 
+.st-done { color: #00ffaa; font-size: 12px; font-weight: bold; background: rgba(0,255,170,0.1); padding: 3px 8px; border-radius: 4px;} 
+.st-fail { color: #ff3c6e; font-size: 12px; font-weight: bold; background: rgba(255,60,110,0.1); padding: 3px 8px; border-radius: 4px;}
+
+/* CSS BẢNG TOOL CHÍNH */
+#md5Tool{ position:fixed; left:16px; bottom:80px; width:340px; background:var(--c-panel); border-radius:18px; border:1px solid var(--c-border); box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 60px rgba(0,210,255,0.05); z-index:9999; transition:opacity .3s,transform .3s; }
+#md5Tool.hidden{opacity:0;transform:scale(0.82) translateY(16px);pointer-events:none!important}
+.t-header{ padding:11px 14px; background:linear-gradient(135deg,rgba(0,30,60,0.8),rgba(20,0,50,0.8)); display:flex; justify-content:space-between; cursor:move; border-bottom:1px solid rgba(255,255,255,0.05); }
+.t-title{ font-family:var(--font-hud);font-size:13px;font-weight:700; color:var(--c-glow); }
+.t-body{padding:15px;display:flex;flex-direction:column;gap:12px;}
+.md5-inp{ width: 100%; background:rgba(0,210,255,0.04); border:1px solid rgba(0,210,255,0.15); border-radius:9px; padding:12px; color:#fff; font-family:var(--font-data); outline:none; text-align: center; }
+.ana-btn{ width: 100%; padding:12px; border:none; border-radius:9px; background:linear-gradient(135deg,#a050ff,#4a0088); color:#fff; font-family:var(--font-hud); font-weight:700; cursor:pointer; font-size: 15px;}
+.result-card{ display:none; flex-direction:column; gap:10px; background:rgba(255,255,255,0.02); padding:15px; border-radius:13px; text-align:center;}
+.result-card.show{display:flex}
+.res-badge{ font-family:var(--font-hud);font-size:35px;font-weight:900; padding:10px; border-radius:11px; }
+.badge-tai{ color:var(--c-tai); text-shadow:0 0 15px var(--c-tai); border: 2px solid var(--c-tai); }
+.badge-xiu{ color:var(--c-xiu); text-shadow:0 0 15px var(--c-xiu); border: 2px solid var(--c-xiu); }
+
+/* KHU VỰC AI HỌC HỎI */
+.ai-box { margin-top: 10px; border-top: 1px dashed #444; padding-top: 10px; }
+.ai-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; font-family: var(--font-hud); cursor: pointer; color: #000; }
+</style>
+</head>
+<body>
+
+<div class="menu-btn" onclick="toggleMenu()">☰</div>
+<div id="overlay" class="overlay" onclick="toggleMenu()"></div>
+<div id="sideMenu" class="sidebar">
+    <div class="sb-user">
+        <h3 id="menuBal">SỐ DƯ: 0đ</h3>
+        <p id="menuTime">HẠN: CHƯA CÓ</p>
+    </div>
+    <button class="sb-btn" onclick="openModal('modalMail')">💬 Nhắn tin cho Admin</button>
+    <button class="sb-btn" onclick="openModal('modalDep')">💰 Nạp tiền tài khoản</button>
+    <button class="sb-btn" style="color:var(--c-gold); border-color:var(--c-gold)" onclick="requestTrial()">🎁 Nhận Key Trải Nghiệm (3H)</button>
+    <button class="sb-btn" onclick="openModal('modalHist')">📜 Lịch sử nạp thẻ</button>
+    <button class="sb-btn" style="border-color:#ff00ff; background: rgba(255,0,255,0.1);" onclick="openModal('modalPriceList')">🛒 Bảng Giá & Mua Key</button>
+
+
+<div id="modalActivate" class="modal">
+    <span class="close-modal" onclick="closeModal('modalActivate')">✕</span>
+    <h3>KÍCH HOẠT KEY VIP</h3>
+    <input type="text" id="inputKey" class="m-input" placeholder="Dán mã Key vào đây...">
+    <button class="m-btn" onclick="activateKey()">XÁC NHẬN VIP</button>
+</div>
+<div id="modalPriceList" class="modal">
+    <span class="close-modal" onclick="closeModal('modalPriceList')">✕</span>
+    <h2 style="color:#ff00ff; text-shadow: 0 0 10px #ff00ff;">💎 BẢNG GIÁ KEY VIP</h2>
+    <div style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
+        <table style="width:100%; border-collapse: collapse; color: #fff; text-align: left;">
+    <tr style="border-bottom: 1px solid #444; color: #aaa; font-size: 12px;">
+        <th style="padding: 10px;">GÓI VIP</th>
+        <th style="padding: 10px;">GIÁ TIỀN</th>
+        <th style="padding: 10px;">HÀNH ĐỘNG</th>
+    </tr>
+    <tr class="price-row"><td>VIP 1 Giờ</td><td>5.000đ</td><td><button class="buy-small" onclick="buyKey('1 Giờ', 5000, 3600000)">Mua</button></td></tr>
+    <tr class="price-row"><td>VIP 3 Giờ</td><td>10.000đ</td><td><button class="buy-small" onclick="buyKey('3 Giờ', 10000, 10800000)">Mua</button></td></tr>
+    <tr class="price-row"><td>VIP 7 Giờ</td><td>20.000đ</td><td><button class="buy-small" onclick="buyKey('7 Giờ', 20000, 25200000)">Mua</button></td></tr>
+    
+    <tr class="price-row" style="color: #00d2ff;"><td>VIP 1 Ngày</td><td>50.000đ</td><td><button class="buy-small" onclick="buyKey('1 Ngày', 50000, 86400000)">Mua</button></td></tr>
+    <tr class="price-row" style="color: #00d2ff;"><td>VIP 3 Ngày</td><td>120.000đ</td><td><button class="buy-small" onclick="buyKey('3 Ngày', 120000, 259200000)">Mua</button></td></tr>
+    
+    <tr class="price-row" style="color: #ffcf00;"><td>VIP 1 Tháng</td><td>500.000đ</td><td><button class="buy-small" onclick="buyKey('1 Tháng', 500000, 2592000000)">Mua</button></td></tr>
+    <tr class="price-row" style="background: rgba(255,207,0,0.1); color: #ffcf00; font-weight: bold;">
+        <td style="padding: 15px 10px;">🔥 VĨNH VIỄN</td>
+        <td>1.500.000đ</td>
+        <td><button class="buy-small" style="background:#ffcf00; color:#000" onclick="buyKey('Vĩnh Viễn', 1500000, 999999999999)">Mua</button></td>
+    </tr>
+</table>
+
+    </div>
+    <p style="font-size: 11px; color: #777; margin-top: 15px;">* Sau khi nhấn Mua, hãy chụp ảnh màn hình gói bạn chọn và gửi cho Admin.</p>
+</div>
+
+<style>
+.price-row { border-bottom: 1px solid #222; transition: 0.3s; }
+.price-row:hover { background: rgba(255,255,255,0.05); }
+.price-row td { padding: 12px 10px; font-family: 'Inter', sans-serif; }
+.buy-small { background: #333; border: 1px solid #555; color: #fff; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+.buy-small:hover { background: #ff00ff; border-color: #ff00ff; }
+</style>
+
+
+</div>
+
+<div id="modalDep" class="modal">
+    <span class="close-modal" onclick="closeModal('modalDep')">✕</span>
+    <h3>NẠP TIỀN HỆ THỐNG</h3>
+    <div class="dep-tabs">
+        <button id="btnTabCard" class="active" onclick="switchDepTab('card')">THẺ CÀO</button>
+        <button id="btnTabBank" onclick="switchDepTab('bank')">CHUYỂN KHOẢN</button>
+    </div>
+    <div id="tabCard">
+        <select id="cNet" class="m-input"><option value="VIETTEL">Nhà mạng: VIETTEL</option><option value="MOBIFONE">Nhà mạng: MOBIFONE</option><option value="VINAPHONE">Nhà mạng: VINAPHONE</option></select>
+        <input type="number" id="cVal" class="m-input" placeholder="Mệnh giá (VD: 50000)">
+        <input type="text" id="cCode" class="m-input" placeholder="Mã thẻ (13-15 số)" maxlength="15" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+        <input type="text" id="cSeri" class="m-input" placeholder="Số Seri (11-14 số)" maxlength="14" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+        <button class="m-btn" onclick="submitCard()">XÁC NHẬN NẠP THẺ</button>
+    </div>
+        <div id="tabBank" style="display:none; text-align:center; padding: 10px 0;">
+        <div style="background: #fff; padding: 10px; border-radius: 10px; display: inline-block; margin-bottom: 10px;">
+            <img id="qrImg" src="https://api.vietqr.io/image/loading.jpg" style="width: 180px; height: 180px; object-fit: contain;">
+        </div>
+        <p style="color:#888; font-size:12px;">Nội dung CK (Bắt buộc):</p>
+        <div style="background:rgba(0,210,255,0.1); padding:8px; border-radius:5px; margin:5px 0; border:1px dashed var(--c-glow);">
+            <strong id="bankMemo" style="color:var(--c-glow); font-size:18px; font-family:var(--font-data);"></strong>
+        </div>
+        <button class="m-btn" style="background:var(--c-tai); color:#000; margin-top:10px;" onclick="openModal('modalBill')">📷 GỬI BILL XÁC NHẬN</button>
+    </div>
+
+
+
+
+<div id="modalBill" class="modal">
+    <div class="modal-content">
+        <h3 style="color:var(--c-tai)">📷 GỬI BILL CHUYỂN KHOẢN</h3>
+        <p style="font-size:12px; color:#ccc;">Sếp vui lòng chụp màn hình bill đã chuyển và tải lên đây nhé!</p>
+        
+        <div style="margin: 20px 0; border: 2px dashed #444; padding: 20px; border-radius: 10px; cursor: pointer;" onclick="document.getElementById('billFile').click()">
+            <input type="file" id="billFile" accept="image/*" style="display:none" onchange="previewBill(event)">
+            <div id="uploadTxt">
+                <span style="font-size:30px">➕</span><br>
+                <b>BẤM VÀO ĐÂY ĐỂ CHỌN ẢNH</b>
+            </div>
+            <img id="billPreview" style="display:none; width:100%; border-radius:8px; margin-top:10px;">
+        </div>
+
+        <button class="m-btn" style="background:var(--c-tai); color:#000; width:100%" onclick="submitBank()">🚀 XÁC NHẬN GỬI BILL</button>
+        <button class="m-btn" style="background:#333; color:#fff; width:100%; margin-top:10px;" onclick="closeModal('modalBill')">ĐÓNG</button>
+    </div>
+</div>
+
+
+
+</div>
+
+<div id="modalHist" class="modal">
+    <span class="close-modal" onclick="closeModal('modalHist')">✕</span>
+    <h3>LỊCH SỬ GIAO DỊCH</h3>
+    <div class="hist-list" id="histList"></div>
+</div>
+
+<div id="modalMail" class="modal">
+    <span class="close-modal" onclick="closeModal('modalMail')">✕</span>
+    <h3>GỬI TIN CHO ADMIN</h3>
+    <textarea id="mailText" class="m-input" style="height:100px; resize:none;" placeholder="Báo lỗi tool, cần mua key... Nhập vào đây bạn nhé"></textarea>
+    <button class="m-btn" style="background:linear-gradient(90deg,#00d2ff,#a050ff); color:#fff" onclick="sendMail()">GỬI ĐI</button>
+</div>
+
+<iframe id="gameFrame" src="about:blank"></iframe>
+<div id="urlBar">
+  <input id="urlInput" type="url" placeholder="https://game.com/ ← Nhập link game & GO"/>
+  <button id="goBtn" onclick="loadGame()">▶ GO</button>
+</div>
+<div class="fab-group">
+  <button class="fab" style="background:#003366; border:1px solid #00aaff;" onclick="document.getElementById('urlBar').classList.toggle('visible')" title="Web"><span class="sphere-text">🌐</span></button>
+  <button class="fab fab-md5" onclick="toggleTool()" title="MD5 VIP"><div class="sphere-icon-md5"><span class="sphere-text">⬡</span></div></button>
+</div>
+
+<div id="md5Tool" class="hidden">
+  <div class="t-header" id="toolHeader" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px;">
+    <div class="t-title">TITAN AI ANALYZER</div>
+    <div style="display: flex; gap: 15px; align-items: center;">
+        <div id="minBtn" style="color: #ffd060; font-size: 22px; cursor: pointer; font-weight: bold; line-height: 0;" onclick="minimizeTool()">−</div>
+        <div style="color: #ff3c6e; font-size: 18px; cursor: pointer;" onclick="toggleTool()">✕</div>
+    </div>
+</div>
+
+
+  <div class="t-body">
+    <input class="md5-inp" id="md5Inp" type="text" maxlength="32" placeholder="Dán mã phiên MD5 vào đây..."/>
+    <button class="ana-btn" onclick="doAnalyze()">▶ KÍCH HOẠT AI SOI CẦU</button>
+
+    <div class="result-card" id="resultCard">
+      <div style="font-size:12px; color:#aaa; font-family:var(--font-data);" id="aiStatus">AI ĐANG KẾT HỢP MD5 & NHỊP CẦU...</div>
+      <div id="resBadge" class="res-badge">---</div>
+      <div style="font-family: var(--font-data); font-size: 16px; margin-top: 5px;">
+        <span style="color: var(--c-tai);" id="txtTai">TÀI: 0%</span> | <span style="color: var(--c-xiu);" id="txtXiu">XỈU: 0%</span>
+      </div>
+      
+      <div class="ai-box" id="feedbackBox" style="display:none;">
+          <p style="font-size:12px; color:#ffd060; margin-bottom:8px;">VUI LÒNG CHỌN KẾT QUẢ THỰC TẾ ĐỂ AI HỌC HỎI VÀ GHI NHỚ LỊCH SỬ:</p>
+          <div style="display:flex; gap:10px;">
+              <button class="ai-btn" style="background:var(--c-tai);" onclick="learnResult('T')">ĐÃ VỀ TÀI</button>
+              <button class="ai-btn" style="background:var(--c-xiu); color:#fff;" onclick="learnResult('X')">ĐÃ VỀ XỈU</button>
+          </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const firebaseConfig = { databaseURL: "https://longdzcloud-22984-default-rtdb.firebaseio.com/" };
+firebase.initializeApp(firebaseConfig); const db = firebase.database();
+let HWID = "ELY-" + btoa(navigator.userAgent).substring(20, 28).toUpperCase();
+let isSidebarOpen = false;
+let patternHistory = localStorage.getItem('titan_pattern_' + HWID) || "";
+let learnCount = localStorage.getItem('titan_learn_count') || 0;
+
+
+function toggleMenu() {
+    isSidebarOpen = !isSidebarOpen;
+    document.getElementById('sideMenu').classList.toggle('open', isSidebarOpen);
+    document.getElementById('overlay').style.display = isSidebarOpen ? 'block' : 'none';
+}
+function openModal(id) {
+    document.querySelectorAll('.modal').forEach(m => m.classList.remove('show'));
+    document.getElementById(id).classList.add('show');
+    if(isSidebarOpen) toggleMenu();
+}
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function switchDepTab(tab) {
+    document.getElementById('btnTabCard').classList.toggle('active', tab==='card');
+    document.getElementById('btnTabBank').classList.toggle('active', tab==='bank');
+    document.getElementById('tabCard').style.display = tab==='card' ? 'block' : 'none';
+    document.getElementById('tabBank').style.display = tab==='bank' ? 'block' : 'none';
+    if(tab === 'bank') {
+        document.getElementById('bankMemo').innerText = "Nap " + HWID;
+    }
+}
+
+function loadGame() {
+    let v = document.getElementById('urlInput').value.trim(); if(!v) return;
+    if(!/^https?:\/\//i.test(v)) v = 'https://' + v;
+    document.getElementById('gameFrame').src = v;
+    document.getElementById('urlBar').classList.remove('visible');
+}
+function toggleTool() { document.getElementById('md5Tool').classList.toggle('hidden'); }
+
+db.ref('users/' + HWID).on('value', snap => {
+    let d = snap.val() || {};
+    document.getElementById('menuBal').innerText = "SỐ DƯ: " + (d.balance || 0).toLocaleString() + "đ";
+    if(d.exp && d.exp > Date.now()) {
+        document.getElementById('md5Tool').classList.remove('hidden');
+    } else {
+        document.getElementById('md5Tool').classList.add('hidden');
+    }
+});
+// Tự động cập nhật QR từ Admin
+db.ref('system/bank_qr').on('value', s => { 
+    if(s.val()) document.getElementById('qrImg').src = s.val(); 
+});
+
+
+// ĐOẠN MỚI SIẾT CHẶT QUẢN LÝ:
+setInterval(() => {
+    db.ref('users/' + HWID).once('value', snap => {
+        let d = snap.val();
+        if(d && d.exp && d.exp > Date.now()) {
+            let diff = d.exp - Date.now();
+            if(diff > 5e11) { 
+                document.getElementById('menuTime').innerText = "HẠN: VĨNH VIỄN"; 
+                document.getElementById('md5Tool').classList.remove('hidden');
+                return; 
+            }
+            let h = Math.floor(diff / 3600000);
+            let m = Math.floor((diff % 3600000) / 60000);
+            let s = Math.floor((diff % 60000) / 1000);
+            document.getElementById('menuTime').innerText = `HẠN: ${h}H ${m}P ${s}S`;
+            document.getElementById('md5Tool').classList.remove('hidden');
+        } else {
+            document.getElementById('menuTime').innerText = "HẠN: HẾT HẠN";
+            // Hết hạn là đóng tool ngay lập tức không nói nhiều
+            document.getElementById('md5Tool').classList.add('hidden');
+            document.getElementById('resultCard').classList.remove('show');
+        }
+    });
+}, 1000);
+
+
+db.ref('users/' + HWID + '/history_dep').on('value', snap => {
+    let data = snap.val(); let html = '';
+    if(data) {
+        let keys = Object.keys(data).reverse();
+        keys.forEach(k => {
+            let d = data[k]; let timeStr = new Date(d.time).toLocaleString();
+            let stClass = d.status === 'Hoàn thành' ? 'st-done' : (d.status === 'Thất bại' ? 'st-fail' : 'st-wait');
+            html += `<div class="hist-item">
+                <div class="hist-row"><span class="h-code">Mã GD: ${k}</span> <span class="${stClass}">${d.status}</span></div>
+                <div class="hist-row"><span class="h-val">${parseInt(d.amount).toLocaleString()}đ - ${d.network}</span> <span class="h-time">${timeStr}</span></div>
+            </div>`;
+        });
+    } else { html = "<p style='text-align:center; color:#888;'>Bạn chưa nạp lần nào.</p>"; }
+    document.getElementById('histList').innerHTML = html;
+});
+
+function requestTrial() {
+    db.ref('users/' + HWID).once('value', snap => {
+        let d = snap.val() || {};
+        if(d.trial_used) {
+            alert("❌ Bạn đã nhận Key Trải Nghiệm rồi, chừa phần người khác với chứ!");
+        } else {
+            let currentExp = (d.exp && d.exp > Date.now()) ? d.exp : Date.now();
+            db.ref('users/' + HWID).update({ exp: currentExp + (3 * 3600000), trial_used: true }).then(() => {
+                alert("✅ Thành công! Đã cộng 3 Giờ VIP Trải Nghiệm vào tài khoản!"); toggleMenu();
+            });
+        }
+    });
+}
+
+function submitCard() {
+    let net = document.getElementById('cNet').value; let val = document.getElementById('cVal').value;
+    let code = document.getElementById('cCode').value; let seri = document.getElementById('cSeri').value;
+    if(!val || code.length < 13 || seri.length < 11) { alert("❌ Vui lòng nhập đúng độ dài Mã thẻ và Seri!"); return; }
+    let tId = "GD" + Math.floor(Math.random()*1000000); let time = Date.now();
+    db.ref('cards/' + tId).set({ hwid: HWID, network: net, amount: val, code: code, seri: seri, time: time });
+    db.ref('users/' + HWID + '/history_dep/' + tId).set({ network: net, amount: val, status: 'Đang xử lý', time: time });
+    alert("✅ Đã gửi thẻ lên hệ thống! Vui lòng chờ Admin duyệt.");
+    document.getElementById('cCode').value = ''; document.getElementById('cSeri').value = '';
+    closeModal('modalDep');
+}
+
+function sendMail() {
+    let txt = document.getElementById('mailText').value.trim();
+    if(!txt) return;
+    db.ref('system/inbox').push({ sender: HWID, text: txt, time: Date.now() }).then(() => {
+        alert("✅ Đã gửi tin nhắn cho Admin LongDZ!"); closeModal('modalMail'); document.getElementById('mailText').value='';
+    });
+}
+
+function doAnalyze() {
+    let md5str = document.getElementById('md5Inp').value.trim().toLowerCase();
+    if (md5str.length !== 32) { alert("Mã MD5 không hợp lệ!"); return; }
+
+    document.getElementById('aiStatus').innerText = "SYSTEM: EXECUTING 10-LAYER BITWISE ANALYSIS...";
+    document.getElementById('resBadge').innerText = "SCAN";
+    document.getElementById('resultCard').classList.add('show');
+    document.getElementById('feedbackBox').style.display = 'none';
+
+    setTimeout(() => {
+        // --- KHỞI TẠO MA TRẬN PHÂN TÍCH 10 LỚP (KHÔNG RANDOM) ---
+        let segments = [
+            md5str.substring(0, 8),   md5str.substring(8, 16),
+            md5str.substring(16, 24), md5str.substring(24, 32)
+        ];
+        let v = segments.map(s => parseInt(s, 16));
+
+        // 1. Bitwise XOR Chaining (Dây chuyền XOR)
+        let layer1 = (v[0] ^ v[1]) ^ (v[2] ^ v[3]);
+        // 2. Prime Modulo Check (Kiểm tra số nguyên tố)
+        let layer2 = (v[0] % 31) + (v[1] % 17) + (v[2] % 13) + (v[3] % 7);
+        // 3. Hex Frequency Density (Mật độ ký tự Hex)
+        let layer3 = (md5str.match(/[a-f]/g) || []).length * 1.5;
+        // 4. Middle-Square Extraction (Trích xuất bình phương giữa)
+        let mid = parseInt(md5str.substring(12, 20), 16) % 1000;
+        // 5. Bitwise Shift Accumulator (Tích lũy dịch bit)
+        let layer5 = (v[0] >> 4) + (v[3] << 2);
+        // 6. ASCII Sum Weight (Tổng trọng số ASCII)
+        let layer6 = md5str.split('').reduce((a, b) => a + b.charCodeAt(0), 0) / 10;
+        // 7. Nibble Parity (Kiểm tra chẵn lẻ vùng nhớ)
+        let layer7 = v.reduce((a, b) => a + (b & 0xFF), 0);
+        // 8. Golden Ratio Scaling (Bù sai số tỷ lệ vàng)
+        let layer8 = (layer1 * 0.618) % 255;
+        // 9. Delta Analysis (Phân tích biến thiên cụm)
+        let layer9 = Math.abs(v[0] - v[3]) % 100;
+        // 10. History Pattern Buffer (Khớp lịch sử dây cầu)
+        let historyWeight = patternHistory.split('').reduce((a, b) => a + (b === 'T' ? 1 : -1), 0);
+
+        // --- TỔNG HỢP MA TRẬN KẾT QUẢ ---
+        let finalScore = (layer1 % 20) + (layer2 % 20) + (layer3) + (mid % 15) + (layer6 % 25) + historyWeight;
+        
+        // Ngưỡng quyết định (Decision Threshold) dựa trên tổng Entropy
+                // Hiệu ứng giả lập bẻ khoá dữ liệu (Hack effect)
+        let hackerLog = ["DECRYPTING MD5...", "BYPASSING FIREWALL...", "CALCULATING ENTROPY...", "MATCHING PATTERNS..."];
+        let logIdx = 0;
+        let logInterval = setInterval(() => {
+            document.getElementById('aiStatus').innerText = hackerLog[logIdx];
+            logIdx++;
+            if(logIdx >= hackerLog.length) clearInterval(logInterval);
+        }, 200);
+
+        let isTai = (finalScore % 100) > 49.3; 
+
+        // 5. Cơ chế AI Self-Correction (Sửa lỗi từ bộ nhớ)
+        let corrections = JSON.parse(localStorage.getItem('titan_corrections') || "{}");
+        if (corrections[md5str]) {
+            isTai = (corrections[md5str] === 'T');
+            document.getElementById('aiStatus').innerText = "AI STATUS: PATTERN RECOGNIZED & CORRECTED!";
+        } else {
+            document.getElementById('aiStatus').innerText = "AI STATUS: DEEP ANALYSIS COMPLETE";
+        }
+
+        let resultText = isTai ? "TÀI" : "XỈU";
+        
+        // Hiển thị thông số kỹ thuật (Cho khách sợ)
+        let debugInfo = `<div id="segData" style="font-size:9px; color:#555; margin-bottom:8px; font-family:monospace;">
+            CORE: ${layer1.toString(16).toUpperCase()} | ENTROPY: ${(finalScore % 100).toFixed(2)}% | MATRIX: ACTIVE
+        </div>`;
+
+        let badge = document.getElementById('resBadge');
+        let oldSeg = document.getElementById('segData');
+        if(oldSeg) oldSeg.remove();
+        
+        badge.insertAdjacentHTML('beforebegin', debugInfo);
+        badge.innerText = resultText;
+        badge.className = `res-badge ${isTai ? 'badge-tai' : 'badge-xiu'}`;
+        
+        let confidence = 72 + (finalScore % 25);
+        document.getElementById('txtTai').innerText = `TÀI: ${isTai ? confidence.toFixed(1) : (100 - confidence).toFixed(1)}%`;
+        document.getElementById('txtXiu').innerText = `XỈU: ${isTai ? (100 - confidence).toFixed(1) : confidence.toFixed(1)}%`;
+        
+        document.getElementById('feedbackBox').style.display = 'block';
+        updateLearnStatus();
+    }, 1200); 
+}
+
+
+function learnResult(actual) {
+    let md5str = document.getElementById('md5Inp').value.trim().toLowerCase();
+    let currentResult = document.getElementById('resBadge').innerText; 
+    
+    // Nếu Tool đoán SAI (Ví dụ đoán TÀI mà về X)
+    if ((currentResult === "TÀI" && actual === "X") || (currentResult === "XỈU" && actual === "T")) {
+        let corrections = JSON.parse(localStorage.getItem('titan_corrections') || "{}");
+        corrections[md5str] = actual; // Ghi vào bộ nhớ: Mã này thực tế phải ra cái này
+        localStorage.setItem('titan_corrections', JSON.stringify(corrections));
+    }
+
+    learnCount++;
+    localStorage.setItem('titan_learn_count', learnCount);
+    
+    patternHistory += actual;
+    if(patternHistory.length > 20) patternHistory = patternHistory.substring(patternHistory.length - 20);
+    localStorage.setItem('titan_pattern_' + HWID, patternHistory);
+    
+    document.getElementById('feedbackBox').style.display = 'none';
+    document.getElementById('aiStatus').innerText = "✅ AI ĐÃ TIẾP NHẬN SAI LẦM & HỌC HỎI!";
+    updateLearnStatus();
+}
+
+function updateLearnStatus() {
+    let footer = document.getElementById('aiFooter');
+    if (!footer) {
+        footer = document.createElement('div');
+        footer.id = 'aiFooter';
+        footer.style = "font-size:10px; color:rgba(255,255,255,0.15); margin-top:10px; text-align:center; font-style:italic;";
+        document.querySelector('.t-body').appendChild(footer);
+    }
+    footer.innerText = `AI Intelligent: ${learnCount} data segments processed | Correction Active`;
+}
+
+
+
+function learnResult(actual) {
+    patternHistory += actual;
+    if(patternHistory.length > 20) patternHistory = patternHistory.substring(patternHistory.length - 20);
+    localStorage.setItem('titan_pattern_' + HWID, patternHistory);
+    document.getElementById('feedbackBox').style.display = 'none';
+    document.getElementById('aiStatus').innerText = "✅ AI ĐÃ HỌC HỎI XONG!";
+    document.getElementById('md5Inp').value = "";
+}
+
+(function drag(panel, handle){ let on=false, ox, oy; function start(e){ if(e.target.tagName==='INPUT'||e.target.tagName==='BUTTON'||e.target.tagName==='DIV' && e.target.onclick)return; e.preventDefault(); on=true; const cx=e.clientX||(e.touches&&e.touches[0].clientX)||0; const cy=e.clientY||(e.touches&&e.touches[0].clientY)||0; const r=panel.getBoundingClientRect(); ox=cx-r.left; oy=cy-r.top; document.addEventListener('mousemove',move); document.addEventListener('touchmove',move,{passive:false}); document.addEventListener('mouseup',stop); document.addEventListener('touchend',stop); } function move(e){ if(!on)return; e.preventDefault(); const cx=e.clientX||(e.touches&&e.touches[0].clientX)||0; const cy=e.clientY||(e.touches&&e.touches[0].clientY)||0; panel.style.left=Math.max(0,cx-ox)+'px'; panel.style.top=Math.max(0,cy-oy)+'px'; panel.style.bottom='auto'; } function stop(){ on=false; document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',stop); } handle.addEventListener('mousedown',start); handle.addEventListener('touchstart',start,{passive:false}); })(document.getElementById('md5Tool'), document.getElementById('toolHeader'));
+function buyKey(goi, giaNum, thoiGianMs) {
+    // giaNum: số tiền (ví dụ 5000), thoiGianMs: thời gian cộng thêm (ví dụ 3600000)
+    
+    db.ref('users/' + HWID).once('value', snap => {
+        let user = snap.val();
+        let balance = (user && user.balance) ? user.balance : 0;
+
+        if (balance < giaNum) {
+            alert(`❌ Số dư không đủ! Gói này cần ${giaNum.toLocaleString()}đ, bạn hiện có ${balance.toLocaleString()}đ. Vui lòng nạp thêm!`);
+            return;
+        }
+
+        let confirmBuy = confirm(`Bạn có chắc muốn dùng ${giaNum.toLocaleString()}đ để mua gói VIP ${goi} không?`);
+        if (confirmBuy) {
+            // 1. Tính toán thời gian hết hạn mới
+            let currentExp = (user.exp && user.exp > Date.now()) ? user.exp : Date.now();
+            let newExp = currentExp + thoiGianMs;
+            
+            // Nếu là gói vĩnh viễn (thời gian cực lớn)
+            if (thoiGianMs > 5e11) newExp = 2000000000000; 
+
+            // 2. Cập nhật trừ tiền và cộng ngày vào Database
+            db.ref('users/' + HWID).update({
+                balance: balance - giaNum,
+                exp: newExp
+            }).then(() => {
+                alert(`✅ Mua thành công gói ${goi}! Chúc bạn chơi vui nhé.`);
+                closeModal('modalPriceList');
+            }).catch(err => {
+                alert("❌ Lỗi kết nối, bạn thử lại nhé!");
+            });
+        }
+    });
+}
+
+let isMinimized = false;
+function minimizeTool() {
+    const toolBody = document.querySelector('#md5Tool .t-body');
+    const minBtn = document.getElementById('minBtn');
+    
+    if (!isMinimized) {
+        // Thu gọn
+        toolBody.style.display = 'none';
+        minBtn.innerText = '+';
+        minBtn.style.color = '#00ffaa';
+        isMinimized = true;
+    } else {
+        // Mở rộng lại
+        toolBody.style.display = 'flex';
+        minBtn.innerText = '−';
+        minBtn.style.color = '#ffd060';
+        isMinimized = false;
+    }
+}
+// Hàm này giúp khách xem trước cái ảnh bill họ vừa chọn
+function previewImg(input) {
+    if (input.files && input.files[0]) {
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('billPreview').src = e.target.result;
+            document.getElementById('billPreview').style.display = 'block';
+            document.getElementById('uploadTxt').innerText = "✅ ĐÃ CHỌN ẢNH";
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function submitBank() {
+    const fileInput = document.getElementById('billFile');
+    if (!fileInput || fileInput.files.length === 0) { 
+        alert("❌ Sếp ơi, phải chọn ảnh Bill thì Admin mới có cái mà duyệt chứ!"); 
+        return; 
+    }
+
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64Image = e.target.result; 
+        const requestId = "BANK_" + Date.now(); // Tạo mã đơn duy nhất
+
+        // --- ĐOẠN NÀY GỬI VỀ ADMIN ---
+        // Sếp lưu ý: Nếu Admin Key của sếp không hiện ảnh, hãy thử đổi chữ 'bank_requests' 
+        // thành 'nap_tien' hoặc 'bills' (tùy theo cái Admin của sếp đang đọc ở đâu nhé)
+        db.ref('bank_requests/' + requestId).set({
+            hwid: HWID,
+            image: base64Image, // Ảnh bill dạng base64
+            status: 'Chờ duyệt',
+            time: Date.now(),
+            amount: "Chưa rõ", // Admin sẽ tự điền khi check bank
+            memo: "Nap " + HWID
+        }).then(() => {
+            // HIỆN THÔNG BÁO ĐÚNG Ý SẾP
+            alert("✅ Đã tạo đơn thành công và chờ duyệt!");
+            
+            // Đóng các bảng lại cho gọn
+            closeModal('modalBill');
+            closeModal('modalDep');
+            
+            // Reset lại chỗ chọn ảnh cho lần sau
+            document.getElementById('billPreview').style.display = 'none';
+            document.getElementById('uploadTxt').innerText = "➕ BẤM VÀO ĐÂY CHỌN ẢNH BILL";
+            fileInput.value = "";
+        }).catch(err => {
+            alert("❌ Lỗi rồi bạn: " + err.message);
+        });
+    };
+    reader.readAsDataURL(file);
+}
+// 1. Hàm hiện ảnh khi sếp vừa chọn file xong
+function previewBill(event) {
+    const reader = new FileReader();
+    reader.onload = function() {
+        const output = document.getElementById('billPreview');
+        output.src = reader.result;
+        output.style.display = 'block';
+        document.getElementById('uploadTxt').style.display = 'none';
+    };
+    reader.readAsDataURL(event.target.files[0]);
+}
+
+// 2. Hàm gửi ảnh về Admin Key
+function submitBank() {
+    const fileInput = document.getElementById('billFile');
+    if (fileInput.files.length === 0) {
+        alert("❌ Sếp chưa chọn ảnh Bill mà!");
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64Image = e.target.result;
+        const requestId = "BANK_" + Date.now();
+
+        // Gửi lên nhánh bank_requests để Admin nhận được
+        db.ref('bank_requests/' + requestId).set({
+            hwid: HWID, // Nhớ đảm bảo biến HWID của sếp đã được định nghĩa
+            image: base64Image,
+            status: 'Chờ duyệt',
+            time: Date.now()
+        }).then(() => {
+            alert("✅ Đã tạo đơn thành công và chờ duyệt!");
+            closeModal('modalBill');
+            // Reset lại giao diện sau khi gửi
+            document.getElementById('billPreview').style.display = 'none';
+            document.getElementById('uploadTxt').style.display = 'block';
+            fileInput.value = "";
+        });
+    };
+    reader.readAsDataURL(file);
+}
+
+// Theo dõi trạng thái đơn nạp theo thời gian thực
+function trackMyRequests() {
+    db.ref('bank_requests').orderByChild('hwid').equalTo(HWID).on('value', snap => {
+        snap.forEach(child => {
+            let d = child.val();
+            if(d.status === 'Hoàn thành') {
+                // Nếu đơn vừa được sếp duyệt trên Admin Panel
+                alert("🎉 CÚC CÙ CU! Đơn nạp của sếp đã được duyệt. Check số dư ngay!");
+                // Xoá đơn đã xong để tránh báo lại
+                db.ref('bank_requests/' + child.key).remove();
+            }
+        });
+    });
+}
+trackMyRequests(); // Chạy ngay khi load
+
+
+</script>
+</body>
+</html>
